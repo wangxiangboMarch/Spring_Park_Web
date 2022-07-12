@@ -14,6 +14,14 @@ import request from '@/utils/request'
 // 第二种写法
 
 export default {
+  getAllList() {
+    return request({
+      // url 的两种写法
+      // url: '/eduServer/teacher/pageTeacherCondition' + '/' + current + '/' + limit,
+      url: `/eduServer/teacher/findAllTeachers`,
+      method: 'get'
+    })
+  },
   // 1.0 获取讲师列表
   getTeacherList(current, limit, teacherQuery) {
     return request({
