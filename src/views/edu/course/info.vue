@@ -117,13 +117,16 @@ export default {
       if (this.$route.params && this.$route.params.id) {
         const id = this.$route.params.id
         console.log(id)
+         //根据id获取课程基本信息
+        this.fetchCourseInfoById(id)
       } else {
         this.courseInfo = { ...defaultForm }
+        // 初始化分类列表
+        this.initSubjectList()
+        // 获取讲师列表
+        this.initTeacherList()
       }
-      // 初始化分类列表
-      this.initSubjectList()
-      // 获取讲师列表
-      this.initTeacherList()
+      
     },
     // 初始化课程分类
     initSubjectList() {
@@ -144,6 +147,32 @@ export default {
     initTeacherList() {
       teacher.getAllList().then(response => {
         this.teacherList = response.data.items
+      })
+    },
+    fetchCourseInfoById(id) {
+      course.getCourseInfoById(id).then(response => {
+        this.courseInfo = response.data.item
+        // 查询所有分类包含以及和二级
+
+        subject.getSubjectList().then(response => {
+          // 所有一级分类
+          this.subjectNestedList = response.data.list
+          // 遍历 当前一级分类id 对应的 二级分类
+          for (var i = 0; i < this.subjectNestedList.length; i++) {
+            var oneSubject = this.subjectNestedList[i]
+            if (oneSubject.id == this.courseInfo.subjectParentId) {
+              this.subSubjectList = this.subjectNestedList[i].children
+
+            }
+          }
+        })
+        // 获取讲师列表
+        this.initTeacherList()
+      }).catch((response) => {
+        this.$message({
+          type: 'error',
+          message: response.message
+        })
       })
     },
     next() {
@@ -173,7 +202,22 @@ export default {
       })
     },
     updateData() {
-      this.$router.push({ path: '/course/chapter/1' })
+      this.saveBtnDisabled = true
+      course.updateCourseInfoById(this.courseInfo).then(response => {
+        this.$message({
+          type: 'success',
+          message: '修改成功!'
+        })
+        return response// 将响应结果传递给then
+      }).then(response => {
+        this.$router.push({ path: '/course/chapter/' + this.courseInfo.id })
+      }).catch((response) => {
+        // console.log(response)
+        this.$message({
+          type: 'error',
+          message: '保存失败'
+        })
+      })
     },
     handleAvatarSuccess(res, file) {
       console.log(res)// 上传响应
